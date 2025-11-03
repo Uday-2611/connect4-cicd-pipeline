@@ -1,11 +1,15 @@
 pipeline {
     agent any
     
+    tools {
+        nodejs 'Node18'   // 👈 use the exact name you gave in Manage Jenkins → Tools
+    }
+
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('dockerhub-credentials')
         DOCKER_IMAGE_PREFIX = 'uday2611' // Change this to your Docker Hub username
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
@@ -18,6 +22,8 @@ pipeline {
             steps {
                 echo '🔨 Building Frontend...'
                 dir('frontend') {
+                    sh 'node -v'
+                    sh 'npm -v'
                     sh 'npm install'
                     sh 'npm run build'
                 }
@@ -105,7 +111,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         success {
             echo '✅ Pipeline completed successfully!'
