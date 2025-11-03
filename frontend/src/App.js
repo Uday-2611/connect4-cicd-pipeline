@@ -8,7 +8,6 @@ function App() {
   const [board, setBoard] = useState(Array(ROWS).fill(null).map(() => Array(COLS).fill(null)));
   const [currentPlayer, setCurrentPlayer] = useState('red');
   const [winner, setWinner] = useState(null);
-  const [gameId, setGameId] = useState(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
