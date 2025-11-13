@@ -1,9 +1,5 @@
 pipeline {
     agent any
-    
-    tools {
-        nodejs 'NodeJS'   // 👈 use the exact name you gave in Manage Jenkins → Tools
-    }
 
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
