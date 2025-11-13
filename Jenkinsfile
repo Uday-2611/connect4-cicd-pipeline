@@ -113,6 +113,11 @@ pipeline {
     }
 
     post {
+    always {
+        script {
+            echo "Cleaning up..."
+        }
+    }
     success {
         echo "Pipeline completed successfully."
     }
