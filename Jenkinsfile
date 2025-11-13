@@ -17,16 +17,12 @@ pipeline {
 
         stage('Build Frontend') {
             steps {
-                echo '🔨 Building Frontend (with caching)...'
+                echo '🔨 Building Frontend (no-cache version)...'
                 dir('frontend') {
-
-                    // Cache the node_modules to avoid reinstalling 1300 packages every build
-                    cache(path: 'node_modules', key: "frontend-node-modules-cache") {
-                        sh 'npm install'
-                    }
-
-                    // Faster CRA builds
-                    sh 'NODE_OPTIONS=--max-old-space-size=2048 CI=false npm run build'
+                    sh 'node -v'
+                    sh 'npm -v'
+                    sh 'npm install'
+                    sh 'npm run build'
                 }
             }
         }
@@ -35,32 +31,26 @@ pipeline {
             steps {
                 echo '🔨 Building Backend...'
                 dir('backend') {
-
-                    // Cache backend node_modules too
-                    cache(path: 'node_modules', key: "backend-node-modules-cache") {
-                        sh 'npm install'
-                    }
+                    sh 'npm install'
                 }
             }
         }
 
         stage('Test') {
             parallel {
-
                 stage('Frontend Tests') {
                     steps {
                         echo '🧪 Running Frontend Tests...'
                         dir('frontend') {
-                            sh 'CI=false npm test -- --watchAll=false || true'
+                            sh 'npm test -- --watchAll=false || true'
                         }
                     }
                 }
-
                 stage('Backend Tests') {
                     steps {
                         echo '🧪 Running Backend Tests...'
                         dir('backend') {
-                            sh 'echo "Backend tests placeholder"'
+                            sh 'echo "Backend tests would run here"'
                         }
                     }
                 }
@@ -78,22 +68,20 @@ pipeline {
 
         stage('Dockerize') {
             parallel {
-
                 stage('Build Frontend Image') {
                     steps {
                         echo '🐳 Building Frontend Docker Image...'
                         dir('frontend') {
-                            sh "docker build --no-cache=false -t ${DOCKER_IMAGE_PREFIX}/connect4-frontend:${BUILD_NUMBER} ."
+                            sh "docker build -t ${DOCKER_IMAGE_PREFIX}/connect4-frontend:${BUILD_NUMBER} ."
                             sh "docker tag ${DOCKER_IMAGE_PREFIX}/connect4-frontend:${BUILD_NUMBER} ${DOCKER_IMAGE_PREFIX}/connect4-frontend:latest"
                         }
                     }
                 }
-
                 stage('Build Backend Image') {
                     steps {
                         echo '🐳 Building Backend Docker Image...'
                         dir('backend') {
-                            sh "docker build --no-cache=false -t ${DOCKER_IMAGE_PREFIX}/connect4-backend:${BUILD_NUMBER} ."
+                            sh "docker build -t ${DOCKER_IMAGE_PREFIX}/connect4-backend:${BUILD_NUMBER} ."
                             sh "docker tag ${DOCKER_IMAGE_PREFIX}/connect4-backend:${BUILD_NUMBER} ${DOCKER_IMAGE_PREFIX}/connect4-backend:latest"
                         }
                     }
@@ -122,15 +110,12 @@ pipeline {
     }
 
     post {
-
         always {
-            script { echo "Cleaning up..." }
+            echo "Cleaning up..."
         }
-
         success {
             echo "Pipeline completed successfully."
         }
-
         failure {
             echo "Pipeline failed."
         }
