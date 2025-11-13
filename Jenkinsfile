@@ -112,16 +112,4 @@ pipeline {
         }
     }
 
-    post {
-        success {
-            echo '✅ Pipeline completed successfully!'
-        }
-        failure {
-            echo '❌ Pipeline failed!'
-        }
-        always {
-            echo '🧹 Cleaning up...'
-            sh 'docker logout'
-        }
-    }
 }
