@@ -6,8 +6,8 @@ pipeline {
     }
 
     environment {
-        DOCKER_HUB_CREDENTIALS = credentials('dockerhub-credentials')
-        DOCKER_IMAGE_PREFIX = 'uday2611' // Change this to your Docker Hub username
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
+        DOCKER_IMAGE_PREFIX = 'uday2611'
     }
 
     stages {
