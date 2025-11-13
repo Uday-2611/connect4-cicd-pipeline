@@ -1,20 +1,23 @@
 pipeline {
     agent any
+    
+    tools {
+        nodejs 'NodeJS'   // 👈 use the exact name you gave in Manage Jenkins → Tools
+    }
 
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
-        DOCKER_IMAGE_PREFIX = 'uday2611'
+        DOCKER_IMAGE_PREFIX = 'uday2611' // Change this to your Docker Hub username
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo '📥 Checking out source code...'
                 checkout scm
             }
         }
-
+        
         stage('Build Frontend') {
             steps {
                 echo '🔨 Building Frontend...'
@@ -26,7 +29,7 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Build Backend') {
             steps {
                 echo '🔨 Building Backend...'
@@ -35,7 +38,7 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Test') {
             parallel {
                 stage('Frontend Tests') {
@@ -56,7 +59,7 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Code Quality Check') {
             steps {
                 echo '✅ Running Code Quality Checks...'
@@ -65,7 +68,7 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Dockerize') {
             parallel {
                 stage('Build Frontend Image') {
@@ -88,7 +91,7 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Push to Docker Hub') {
             steps {
                 echo '📤 Pushing images to Docker Hub...'
@@ -99,7 +102,7 @@ pipeline {
                 sh "docker push ${DOCKER_IMAGE_PREFIX}/connect4-backend:latest"
             }
         }
-
+        
         stage('Deploy') {
             steps {
                 echo '🚀 Deploying application...'
@@ -110,14 +113,15 @@ pipeline {
     }
 
     post {
-        always {
-            echo "Cleaning up..."
-        }
         success {
-            echo "Pipeline completed successfully."
+            echo '✅ Pipeline completed successfully!'
         }
         failure {
-            echo "Pipeline failed."
+            echo '❌ Pipeline failed!'
+        }
+        always {
+            echo '🧹 Cleaning up...'
+            sh 'docker logout'
         }
     }
 }
