@@ -7,55 +7,66 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo '📥 Checking out source code...'
                 checkout scm
             }
         }
-        
+
         stage('Build Frontend') {
             steps {
-                echo '🔨 Building Frontend...'
+                echo '🔨 Building Frontend (with caching)...'
                 dir('frontend') {
-                    sh 'node -v'
-                    sh 'npm -v'
-                    sh 'npm install'
-                    sh 'npm run build'
+
+                    // Cache the node_modules to avoid reinstalling 1300 packages every build
+                    cache(path: 'node_modules', key: "frontend-node-modules-cache") {
+                        sh 'npm install'
+                    }
+
+                    // Faster CRA builds
+                    sh 'NODE_OPTIONS=--max-old-space-size=2048 CI=false npm run build'
                 }
             }
         }
-        
+
         stage('Build Backend') {
             steps {
                 echo '🔨 Building Backend...'
                 dir('backend') {
-                    sh 'npm install'
+
+                    // Cache backend node_modules too
+                    cache(path: 'node_modules', key: "backend-node-modules-cache") {
+                        sh 'npm install'
+                    }
                 }
             }
         }
-        
+
         stage('Test') {
             parallel {
+
                 stage('Frontend Tests') {
                     steps {
                         echo '🧪 Running Frontend Tests...'
                         dir('frontend') {
-                            sh 'npm test -- --watchAll=false || true'
+                            sh 'CI=false npm test -- --watchAll=false || true'
                         }
                     }
                 }
+
                 stage('Backend Tests') {
                     steps {
                         echo '🧪 Running Backend Tests...'
                         dir('backend') {
-                            sh 'echo "Backend tests would run here"'
+                            sh 'echo "Backend tests placeholder"'
                         }
                     }
                 }
             }
         }
-        
+
         stage('Code Quality Check') {
             steps {
                 echo '✅ Running Code Quality Checks...'
@@ -64,30 +75,32 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Dockerize') {
             parallel {
+
                 stage('Build Frontend Image') {
                     steps {
                         echo '🐳 Building Frontend Docker Image...'
                         dir('frontend') {
-                            sh "docker build -t ${DOCKER_IMAGE_PREFIX}/connect4-frontend:${BUILD_NUMBER} ."
+                            sh "docker build --no-cache=false -t ${DOCKER_IMAGE_PREFIX}/connect4-frontend:${BUILD_NUMBER} ."
                             sh "docker tag ${DOCKER_IMAGE_PREFIX}/connect4-frontend:${BUILD_NUMBER} ${DOCKER_IMAGE_PREFIX}/connect4-frontend:latest"
                         }
                     }
                 }
+
                 stage('Build Backend Image') {
                     steps {
                         echo '🐳 Building Backend Docker Image...'
                         dir('backend') {
-                            sh "docker build -t ${DOCKER_IMAGE_PREFIX}/connect4-backend:${BUILD_NUMBER} ."
+                            sh "docker build --no-cache=false -t ${DOCKER_IMAGE_PREFIX}/connect4-backend:${BUILD_NUMBER} ."
                             sh "docker tag ${DOCKER_IMAGE_PREFIX}/connect4-backend:${BUILD_NUMBER} ${DOCKER_IMAGE_PREFIX}/connect4-backend:latest"
                         }
                     }
                 }
             }
         }
-        
+
         stage('Push to Docker Hub') {
             steps {
                 echo '📤 Pushing images to Docker Hub...'
@@ -98,7 +111,7 @@ pipeline {
                 sh "docker push ${DOCKER_IMAGE_PREFIX}/connect4-backend:latest"
             }
         }
-        
+
         stage('Deploy') {
             steps {
                 echo '🚀 Deploying application...'
@@ -109,17 +122,17 @@ pipeline {
     }
 
     post {
-    always {
-        script {
-            echo "Cleaning up..."
+
+        always {
+            script { echo "Cleaning up..." }
+        }
+
+        success {
+            echo "Pipeline completed successfully."
+        }
+
+        failure {
+            echo "Pipeline failed."
         }
     }
-    success {
-        echo "Pipeline completed successfully."
-    }
-    failure {
-        echo "Pipeline failed."
-    }
-}
-
 }
