@@ -17,7 +17,7 @@ pipeline {
 
         stage('Build Frontend') {
             steps {
-                echo '🔨 Building Frontend (no-cache version)...'
+                echo '🔨 Building Frontend...'
                 dir('frontend') {
                     sh 'node -v'
                     sh 'npm -v'
