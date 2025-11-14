@@ -92,9 +92,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Connect 4 Multiplayer</h1>
-        <div className="status">
-          {connected ? '🟢 Connected to Server' : '🔴 Disconnected'}
-        </div>
+        
         {winner ? (
           <div className="winner">
             <h2>🎉 {winner.toUpperCase()} WINS! 🎉</h2>
